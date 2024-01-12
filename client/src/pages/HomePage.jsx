@@ -6,8 +6,9 @@ function HomePage() {
   const navigate = useNavigate();
 
   const [products, setProducts] = useState([]);
-  const [isError, setIsError] = useState(null);
-  const [isLoading, setIsLoading] = useState(null);
+  const [search, setSearch] = useState("");
+  const [isError, setIsError] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const getProducts = async () => {
     try {
@@ -24,13 +25,27 @@ function HomePage() {
 
   const deleteProduct = async (productId) => {
     await axios.delete(`http://localhost:4001/products/${productId}`);
-    const newProducts = products.filter((product) => product.id !== productId);
+    const newProducts = products.filter((product) => product._id !== productId);
     setProducts(newProducts);
   };
-
+  const getProductByname = async () => {
+    try {
+      setIsError(false);
+      setIsLoading(true);
+      const results = await axios(`http://localhost:4001/products?sname=${search}`);
+      setProducts(results.data.data);
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      setIsError(true);
+    }
+  };
   useEffect(() => {
     getProducts();
   }, []);
+  useEffect(() => {
+    getProductByname();
+  }, [search]);
 
   return (
     <div>
@@ -48,7 +63,14 @@ function HomePage() {
         <div className="search-box">
           <label>
             Search product
-            <input type="text" placeholder="Search by name" />
+            <input
+              type="text"
+              placeholder="Search by name"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+              }}
+            />
           </label>
         </div>
         <div className="category-filter">
@@ -85,8 +107,9 @@ function HomePage() {
               <div className="product-detail">
                 <h1>Product name: {product.name} </h1>
                 <h2>Product price: {product.price}</h2>
-                <h3>Category: IT</h3>
-                <h3>Created Time: 1 Jan 2011, 00:00:00</h3>
+                <h3>Category: {product.category}</h3>
+                <h3>Created Time: {product.createdTime}</h3>
+                <h3>Updated Time:{product?.updated_at}</h3>
                 <p>Product description: {product.description} </p>
                 <div className="product-actions">
                   <button

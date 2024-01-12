@@ -7,22 +7,24 @@ function CreateProductForm() {
   const [imageUrl, setImageUrl] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [category,setCategory]=useState("it")
 
   const navigate = useNavigate();
 
-  const createProducts = async () => {
+  const createProducts = async (category) => {
     await axios.post("http://localhost:4001/products", {
-      name,
+      name:name,
       image: imageUrl,
-      price,
-      description,
+      price:price,
+      description:description,
+      category:category
     });
     navigate("/");
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    createProducts();
+    createProducts(category);
   };
 
   return (
@@ -94,7 +96,9 @@ function CreateProductForm() {
       <div className="input-container">
         <label>
           Category
-          <select id="category" name="category" value="it">
+          <select id="category" name="category" value={category} onChange={(event)=>{
+            setCategory(event.target.value);
+          }}>
             <option disabled value="">
               -- Select a category --
             </option>
