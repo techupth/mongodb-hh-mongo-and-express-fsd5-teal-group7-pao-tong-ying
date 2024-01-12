@@ -8,12 +8,13 @@ function HomePage() {
   const [products, setProducts] = useState([]);
   const [isError, setIsError] = useState(null);
   const [isLoading, setIsLoading] = useState(null);
+  const [page,setPage] = useState(0);
 
   const getProducts = async () => {
     try {
       setIsError(false);
       setIsLoading(true);
-      const results = await axios("http://localhost:4001/products");
+      const results = await axios(`http://localhost:4001/products?limit=3&page=${page}`);
       setProducts(results.data.data);
       setIsLoading(false);
     } catch (error) {
@@ -30,7 +31,7 @@ function HomePage() {
 
   useEffect(() => {
     getProducts();
-  }, []);
+  }, [page]);
 
   return (
     <div>
@@ -124,8 +125,18 @@ function HomePage() {
       </div>
 
       <div className="pagination">
-        <button className="previous-button">Previous</button>
-        <button className="next-button">Next</button>
+        <button className="previous-button" onClick={()=>{
+          setPage((prev)=>{
+            prev-=1
+            if(prev<1){
+              return 0
+            }
+            return prev
+          })
+        }}>Previous</button>
+        <button className="next-button" onClick={()=>{
+          setPage(page+1)
+        }}>Next</button>
       </div>
       <div className="pages">1/ total page</div>
     </div>

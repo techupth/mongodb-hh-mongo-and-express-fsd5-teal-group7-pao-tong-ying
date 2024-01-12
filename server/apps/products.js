@@ -5,8 +5,13 @@ import { ObjectId } from "mongodb";
 const productRouter = Router();
 
 productRouter.get("/", async (req, res) => {
+  const limit = req.query.limit;
+  const page = req.query.page
+  // console.log(req.query.limit)
+  //console.log(page)
   const collection = db.collection("products");
-  const result = await collection.find().toArray();//ต้องเป็น arr เพราะ const [products, setProducts] = useState([]); //ตัวรับเป็น arr
+  const result = await collection.aggregate([{$skip:(Number(limit)*page)},{$limit:Number(req.query.limit)}]).toArray();//ต้องเป็น arr เพราะ const [products, setProducts] = useState([]); //ตัวรับเป็น arr
+  
   return res.json({
     data: result
  });
