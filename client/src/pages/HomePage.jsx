@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { DebounceInput } from "react-debounce-input";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -9,12 +10,15 @@ function HomePage() {
   const [search, setSearch] = useState("");
   const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [category, setCategory] = useState("");
 
   const getProducts = async () => {
     try {
       setIsError(false);
       setIsLoading(true);
-      const results = await axios("http://localhost:4001/products");
+      const results = await axios(
+        `http://localhost:4001/products?keywords=${search}&category=${category}`
+      );
       setProducts(results.data.data);
       setIsLoading(false);
     } catch (error) {
@@ -28,24 +32,10 @@ function HomePage() {
     const newProducts = products.filter((product) => product._id !== productId);
     setProducts(newProducts);
   };
-  const getProductByname = async () => {
-    try {
-      setIsError(false);
-      setIsLoading(true);
-      const results = await axios(`http://localhost:4001/products?sname=${search}`);
-      setProducts(results.data.data);
-      setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-      setIsError(true);
-    }
-  };
+
   useEffect(() => {
     getProducts();
-  }, []);
-  useEffect(() => {
-    getProductByname();
-  }, [search]);
+  }, [search, category]);
 
   return (
     <div>
@@ -63,7 +53,9 @@ function HomePage() {
         <div className="search-box">
           <label>
             Search product
-            <input
+            <DebounceInput
+              minLength={2}
+              debounceTimeout={500}
               type="text"
               placeholder="Search by name"
               value={search}
@@ -76,10 +68,18 @@ function HomePage() {
         <div className="category-filter">
           <label>
             View Category
-            <select id="category" name="category" value="it">
-              <option disabled value="">
+            <select
+              id="category"
+              name="category"
+              value={category}
+              onChange={(e) => {
+                setCategory(e.target.value);
+              }}
+            >
+              <option disabled selected>
                 -- Select a category --
               </option>
+              <option value="">All</option>
               <option value="it">IT</option>
               <option value="fashion">Fashion</option>
               <option value="food">Food</option>
