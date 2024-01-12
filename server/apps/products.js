@@ -1,21 +1,21 @@
-import { Router } from "express";
+import { Router, query } from "express";
 import { ObjectId } from "mongodb";
 import { getCollection } from "../utils/db.js";
 const productRouter = Router();
 
-productRouter.get("/", async (req, res) => {
-  try {
-    const collection = getCollection("whatisit");
-    const result = await collection
-      .find({})
-      .sort({ createdTime: -1 })
-      .limit(10)
-      .toArray();
-    return res.json({ data: result });
-  } catch (error) {
-    return res.json({ message: `Can not find data from Database. ${error}` });
-  }
-});
+// productRouter.get("/", async (req, res) => {
+//   try {
+//     const collection = getCollection("whatisit");
+//     const result = await collection
+//       .find({})
+//       .sort({ createdTime: -1 })
+//       .limit(10)
+//       .toArray();
+//     return res.json({ data: result });
+//   } catch (error) {
+//     return res.json({ message: `Can not find data from Database. ${error}` });
+//   }
+// });
 
 productRouter.get("/:id", async (req, res) => {
   try {
@@ -29,24 +29,31 @@ productRouter.get("/:id", async (req, res) => {
 });
 
 productRouter.get("/", async (req, res) => {
-  const getName = req.query.sname;
-  if (getName === undefined) {
-    return res.status(400).json({
-      message: "Please send name parameter in the URL endpoint",
-    });
-  }
   try {
+    const name = req.query.keywords;
+    const category = req.query.category;
+    let filter = {};
+    if (name) {
+      const regexName = name.split(" ").join("|");
+      filter.name = new RegExp(regexName, "ig");
+    }
+    if (category) {
+      const regexCategory = category.split(" ").join("|");
+      filter.category = new RegExp(regexCategory, "ig");
+    }
+    if (!name && !category) {
+      filter = {};
+    }
+    console.log(filter);
     const collection = getCollection("whatisit");
 
-    const result = await collection.findOne({ name: getName });
-    const regexName = sname.split("").join("|");
-    const regex = new RegExp(regexName, "ig");
-    const resultRegex = result.filter((tiem) => {
-      return tiem.name.match(regex);
-    });
-    return res.json({ data: resultRegex });
+    const result = await collection.find(filter).limit(10).toArray();
+
+    return res.json({ data: result });
   } catch (error) {
-    return res.json({ message: `Can not find data from Database. ${error}` });
+    return res.json({
+      message: `Cannot find data from the Database. ${error}`,
+    });
   }
 });
 
