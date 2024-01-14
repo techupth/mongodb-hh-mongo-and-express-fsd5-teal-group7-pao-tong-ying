@@ -8,12 +8,14 @@ function HomePage() {
   const [products, setProducts] = useState([]);
   const [isError, setIsError] = useState(null);
   const [isLoading, setIsLoading] = useState(null);
+  const [limit,setLimit] = useState(3)
+  const [page,setPage] = useState(0);
 
   const getProducts = async () => {
     try {
       setIsError(false);
       setIsLoading(true);
-      const results = await axios("http://localhost:4001/products");
+      const results = await axios(`http://localhost:4001/products?limit=${limit}&page=${page}`);
       setProducts(results.data.data);
       setIsLoading(false);
     } catch (error) {
@@ -24,13 +26,13 @@ function HomePage() {
 
   const deleteProduct = async (productId) => {
     await axios.delete(`http://localhost:4001/products/${productId}`);
-    const newProducts = products.filter((product) => product.id !== productId);
+    const newProducts = products.filter((product) => product._id !== productId);
     setProducts(newProducts);
   };
 
   useEffect(() => {
     getProducts();
-  }, []);
+  }, [page,limit]);
 
   return (
     <div>
@@ -54,7 +56,7 @@ function HomePage() {
         <div className="category-filter">
           <label>
             View Category
-            <select id="category" name="category" value="it">
+            <select id="category" name="category" value="it" onChange={(e)=>{}}>
               <option disabled value="">
                 -- Select a category --
               </option>
@@ -65,6 +67,15 @@ function HomePage() {
           </label>
         </div>
       </div>
+
+      <div style={{textAlign:"center",marginBottom:"20px"}}>
+        <h1>query limit</h1>
+        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(3)}>3</button>
+        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(5)}>5</button>
+        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(7)}>7</button>
+        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(10)}>10</button>
+      </div>
+
       <div className="product-list">
         {!products.length && !isError && (
           <div className="no-blog-posts-container">
@@ -124,8 +135,18 @@ function HomePage() {
       </div>
 
       <div className="pagination">
-        <button className="previous-button">Previous</button>
-        <button className="next-button">Next</button>
+        <button className="previous-button" onClick={()=>{
+          setPage((prev)=>{
+            prev-=1
+            if(prev<1){
+              return 0
+            }
+            return prev
+          })
+        }}>Previous</button>
+        <button className="next-button" onClick={()=>{
+          setPage(page+1)
+        }}>Next</button>
       </div>
       <div className="pages">1/ total page</div>
     </div>
