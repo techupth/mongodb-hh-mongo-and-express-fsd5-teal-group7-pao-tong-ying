@@ -8,16 +8,23 @@ function HomePage() {
   const [products, setProducts] = useState([]);
   const [isError, setIsError] = useState(null);
   const [isLoading, setIsLoading] = useState(null);
+  const [category,setCategory] = useState("");
+  const [keyword,setKeyword] = useState("");
   const [limit,setLimit] = useState(3)
+  const [allPage,setAllPage] = useState(0)
   const [page,setPage] = useState(0);
+  const [sort,setSort] = useState(0);
+  const [showSort,setShowSort] = useState(true)
 
   const getProducts = async () => {
     try {
       setIsError(false);
       setIsLoading(true);
-      const results = await axios(`http://localhost:4001/products?limit=${limit}&page=${page}`);
+      const results = await axios(`http://localhost:4001/products?limit=${limit}&page=${page}&category=${category}&keyword=${keyword}&sort=${sort}`);
       setProducts(results.data.data);
+      setAllPage(results.data.totalDocs)
       setIsLoading(false);
+      //console.log(results)
     } catch (error) {
       setIsLoading(false);
       setIsError(true);
@@ -32,7 +39,7 @@ function HomePage() {
 
   useEffect(() => {
     getProducts();
-  }, [page,limit]);
+  }, [page,limit,category,keyword,sort]);
 
   return (
     <div>
@@ -50,16 +57,17 @@ function HomePage() {
         <div className="search-box">
           <label>
             Search product
-            <input type="text" placeholder="Search by name" />
+            <input type="text" placeholder="Search by name" value={keyword} onChange={(e)=>{setKeyword(e.target.value)}}/>
           </label>
         </div>
         <div className="category-filter">
           <label>
             View Category
-            <select id="category" name="category" value="it" onChange={(e)=>{}}>
+            <select id="category" name="category" value={category} onChange={(e)=>{setCategory(e.target.value)}}>
               <option disabled value="">
                 -- Select a category --
               </option>
+              <option value="">Show All</option>
               <option value="it">IT</option>
               <option value="fashion">Fashion</option>
               <option value="food">Food</option>
@@ -74,6 +82,18 @@ function HomePage() {
         <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(5)}>5</button>
         <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(7)}>7</button>
         <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(10)}>10</button>
+        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(0)}>All</button>
+      </div>
+      <div style={{textAlign:"center",marginBottom:"20px"}}>
+      {showSort&&<button style={{padding:"4px",width:"200px"}} onClick={()=>{
+        setSort(-1)
+        setShowSort(!showSort)
+      }}>มากไปน้อย</button>}
+
+      {!showSort&&<button style={{padding:"4px",width:"200px"}} onClick={()=>{
+        setSort(1)
+        setShowSort(!showSort)
+      }}>น้อยไปมาก</button>}
       </div>
 
       <div className="product-list">
@@ -96,8 +116,8 @@ function HomePage() {
               <div className="product-detail">
                 <h1>Product name: {product.name} </h1>
                 <h2>Product price: {product.price}</h2>
-                <h3>Category: IT</h3>
-                <h3>Created Time: 1 Jan 2011, 00:00:00</h3>
+                <h3>Category: {product.category}</h3>
+                <h3>Created Time: {product.create_at}</h3>
                 <p>Product description: {product.description} </p>
                 <div className="product-actions">
                   <button
@@ -145,10 +165,11 @@ function HomePage() {
           })
         }}>Previous</button>
         <button className="next-button" onClick={()=>{
-          setPage(page+1)
+          {page<Math.floor(allPage/limit)?setPage(page+1):null}
+          
         }}>Next</button>
       </div>
-      <div className="pages">1/ total page</div>
+      <div className="pages">{page + 1} / {Math.ceil(allPage / limit) === Infinity ? 1 : Math.ceil(allPage / limit)}</div>
     </div>
   );
 }

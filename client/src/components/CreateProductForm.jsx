@@ -7,6 +7,7 @@ function CreateProductForm() {
   const [imageUrl, setImageUrl] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [category,setCategory] = useState("")
 
   const navigate = useNavigate();
 
@@ -16,6 +17,8 @@ function CreateProductForm() {
       image: imageUrl,
       price,
       description,
+      category,
+      //create_at: new Date() // ทำเวลาหน้าบ้าน // ทำหลังบ้านก็ได้
     });
     navigate("/");
   };
@@ -94,7 +97,7 @@ function CreateProductForm() {
       <div className="input-container">
         <label>
           Category
-          <select id="category" name="category" value="it">
+          <select id="category" name="category" value={category} onChange={(e)=>{setCategory(e.target.value)}}>
             <option disabled value="">
               -- Select a category --
             </option>
