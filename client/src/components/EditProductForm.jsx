@@ -22,7 +22,7 @@ function EditProductForm() {
     setImageUrl(result.data.data.image);
     setPrice(result.data.data.price);
     setDescription(result.data.data.description);
-    setDescription(result.data.data.category);
+    setCategory(result.data.data.category);
   };
 
   const updateProduct = async () => {

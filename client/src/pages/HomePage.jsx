@@ -8,23 +8,22 @@ function HomePage() {
   const [products, setProducts] = useState([]);
   const [isError, setIsError] = useState(null);
   const [isLoading, setIsLoading] = useState(null);
-  const [category,setCategory]=useState("")
+  const [category, setCategory] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
 
-  const getCategory = async ()=> {
-  
-      const results = await axios.get("http://localhost:4500/products");
-const getResult = results.data.data
-const filterData = getResult.filter((product) => product.category == category)
-console.log(filterData)
-setProducts(filterData)
-    }
-
-  
-  const getProducts = async () => {
+  const getProduct = async () => {
     try {
       setIsError(false);
       setIsLoading(true);
-      const results = await axios.get("http://localhost:4500/products");
+
+      const results = await axios(
+        `http://localhost:4500/products?category=${category}&name=${searchInput}&page=${page}`
+      );
+      console.log(results)
+      console.log("asewedqrqwertqewtwetryewtywretyrtyredt")
+      setTotalPage(results.data.totalPage);
       setProducts(results.data.data);
       setIsLoading(false);
     } catch (error) {
@@ -33,19 +32,56 @@ setProducts(filterData)
     }
   };
 
+  const convertTimeFormat = (createTime) => {
+    const date = new Date(createTime);
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    return `${date.getDate()} ${
+      months[date.getMonth()]
+    } ${date.getFullYear()} ${date.toLocaleTimeString()}`;
+  };
+
   const deleteProduct = async (productId) => {
     await axios.delete(`http://localhost:4500/products/${productId}`);
-    const newProducts = products.filter((product) => product.id !== productId);
-    setProducts(newProducts);
+    const results = await axios.get(
+      `http://localhost:4500/products?category=${category}&name=${searchInput}&page=${page}`
+    );
+
+    setProducts(results.data.data);
+  };
+
+  const setPrevios = (num) => {
+    if (page <= 1) {
+      setPage(page);
+    } else {
+      setPage(page - num);
+    }
+  };
+
+  const setNext = (num) => {
+    if (totalPage === page) {
+      setPage(page);
+    } else if (page < totalPage) {
+      setPage(page + num);
+    }
   };
 
   useEffect(() => {
-    getProducts();
-  }, []);
-
-  useEffect(() => {
-    getCategory();
-  }, [category,products]);
+    getProduct();
+  }, [category, searchInput, page]);
 
   return (
     <div>
@@ -63,15 +99,26 @@ setProducts(filterData)
         <div className="search-box">
           <label>
             Search product
-            <input type="text" placeholder="Search by name" />
+            <input
+              type="text"
+              placeholder="Search by name"
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+              }}
+            />
           </label>
         </div>
         <div className="category-filter">
           <label>
             View Category
-            <select id="category" name="category" value={category} onChange={(event) => {
-              setCategory(event.target.value);
-            }} >
+            <select
+              id="category"
+              name="category"
+              value={category}
+              onChange={(event) => {
+                setCategory(event.target.value);
+              }}
+            >
               <option disabled value="">
                 -- Select a category --
               </option>
@@ -103,7 +150,7 @@ setProducts(filterData)
                 <h1>Product name: {product.name} </h1>
                 <h2>Product price: {product.price}</h2>
                 <h3>Category: {product.category}</h3>
-                <h3>Created Time: 1 Jan 2011, 00:00:00</h3>
+                <h3>Created Time:{convertTimeFormat(product.create_at)}</h3>
                 <p>Product description: {product.description} </p>
                 <div className="product-actions">
                   <button
@@ -141,10 +188,16 @@ setProducts(filterData)
       </div>
 
       <div className="pagination">
-        <button className="previous-button">Previous</button>
-        <button className="next-button">Next</button>
+        <button className="previous-button" onClick={() => setPrevios(1)}>
+          Previous
+        </button>
+        <button className="next-button" onClick={() => setNext(1)}>
+          Next
+        </button>
       </div>
-      <div className="pages">1/ total page</div>
+      <div className="pages">
+        {page}/ {totalPage}
+      </div>
     </div>
   );
 }

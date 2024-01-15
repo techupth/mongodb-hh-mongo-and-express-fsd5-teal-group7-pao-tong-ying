@@ -8,6 +8,7 @@ function CreateProductForm() {
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [category,setCategory]=useState("")
+  
 
   const navigate = useNavigate();
 
@@ -18,6 +19,7 @@ function CreateProductForm() {
       price,
       description,
       category,
+      
     });
     navigate("/");
   };
