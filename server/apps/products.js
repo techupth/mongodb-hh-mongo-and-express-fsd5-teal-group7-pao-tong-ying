@@ -5,54 +5,66 @@ import { ObjectId } from "mongodb";
 const productRouter = Router();
 
 productRouter.get("/", async (req, res) => {
-  const limit = req.query.limit;
+  const category = req.query.category;
+  const keyword = req.query.name;
+  const create_at = new Date()
   const page = req.query.page
-  // console.log(req.query.limit)
-  //console.log(page)
-  const collection = db.collection("products");
-  const result = await collection.aggregate([{$skip:(Number(limit)*page)},{$limit:Number(req.query.limit)}]).toArray();//ต้องเป็น arr เพราะ const [products, setProducts] = useState([]); //ตัวรับเป็น arr
-  
-  return res.json({
-    data: result
- });
-});
 
+  const query = {};
+  if (category) {
+    query.category = category;
+  }
+  if (keyword) {
+    query.name = new RegExp(keyword, "i");
+  }
+  const collection = db.collection("products");
+  const getData = await collection.find(query).sort({create_at:-1}).skip( page > 0 ? ( ( page - 1 ) * 5 ) : 0 )
+  .limit(5).toArray();
+  const getDataForPage = await collection.find(query).toArray();
+  const countPage = Math.ceil(getDataForPage.length/5)
+  return res.json({
+    data: getData,
+    totalPage : countPage,
+  });
+});
 productRouter.get("/:id", async (req, res) => {
   const collection = db.collection("products");
-  const objId = new ObjectId(req.params.id);
-  const result = await collection.findOne({_id:objId});//ไม่ต้องเป็น arr เพราะ const [product, setProduct] = useState({}); //ตัวรับเป็น obj
+  let id = new ObjectId(req.params.id);
+  const getData = await collection.find({ _id: id }).limit(10).toArray();
+
   return res.json({
-    data: result
- });
+    data: getData[0],
+  });
 });
 
 productRouter.post("/", async (req, res) => {
   const collection = db.collection("products");
-  const result = await collection.insertOne(req.body);
+  const create_at = new Date()
+  const productInsert = { ...req.body};
+  const product = await collection.insertOne({...productInsert,create_at});
   return res.json({
-    message: "Product has been created successfully"
+    message: "Product has been created successfully",
   });
 });
-  
 
 productRouter.put("/:id", async (req, res) => {
   const collection = db.collection("products");
-  const objId = new ObjectId(req.params.id);
-  const upd = {...req.body}
-  await collection.updateOne({_id: objId},{$set:upd});
+  let id = new ObjectId(req.params.id);
+  const updateInfo = { ...req.body };
+  await collection.updateOne({ _id: id }, { $set: updateInfo });
+  console.log(id);
   return res.json({
-    message: "Product has been updated successfully"
- });
+    message: "Product has been updated successfully",
+  });
 });
 
-productRouter.delete("/:productId", async (req, res) => {
+productRouter.delete("/:id", async (req, res) => {
   const collection = db.collection("products");
-  const objId = new ObjectId(req.params.productId);
-  await collection.deleteOne({_id:objId})
-
+  const id = new ObjectId(req.params.id);
+  await collection.deleteOne({ _id: id });
   return res.json({
-    message: "Product has been deleted successfully"
- });
+    message: "Product has been deleted successfully",
+  });
 });
 
 export default productRouter;

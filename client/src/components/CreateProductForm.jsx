@@ -7,15 +7,19 @@ function CreateProductForm() {
   const [imageUrl, setImageUrl] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [category,setCategory]=useState("")
+  
 
   const navigate = useNavigate();
 
   const createProducts = async () => {
-    await axios.post("http://localhost:4001/products", {
+    await axios.post("http://localhost:4500/products", {
       name,
       image: imageUrl,
       price,
       description,
+      category,
+      
     });
     navigate("/");
   };
@@ -94,7 +98,9 @@ function CreateProductForm() {
       <div className="input-container">
         <label>
           Category
-          <select id="category" name="category" value="it">
+          <select id="category" name="category" onChange={(event) => {
+              setCategory(event.target.value);
+            }} value={category}>
             <option disabled value="">
               -- Select a category --
             </option>

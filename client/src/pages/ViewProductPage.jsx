@@ -9,7 +9,7 @@ function ViewProductPage() {
 
   const getProduct = async () => {
     const results = await axios(
-      `http://localhost:4001/products/${params.productId}`
+      `http://localhost:4500/products/${params.productId}`
     );
     setProduct(results.data.data);
   };

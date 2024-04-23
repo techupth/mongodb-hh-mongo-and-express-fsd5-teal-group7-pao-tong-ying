@@ -8,14 +8,22 @@ function HomePage() {
   const [products, setProducts] = useState([]);
   const [isError, setIsError] = useState(null);
   const [isLoading, setIsLoading] = useState(null);
-  const [limit,setLimit] = useState(3)
-  const [page,setPage] = useState(0);
+  const [category, setCategory] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
 
-  const getProducts = async () => {
+  const getProduct = async () => {
     try {
       setIsError(false);
       setIsLoading(true);
-      const results = await axios(`http://localhost:4001/products?limit=${limit}&page=${page}`);
+
+      const results = await axios(
+        `http://localhost:4500/products?category=${category}&name=${searchInput}&page=${page}`
+      );
+      console.log(results)
+      console.log("asewedqrqwertqewtwetryewtywretyrtyredt")
+      setTotalPage(results.data.totalPage);
       setProducts(results.data.data);
       setIsLoading(false);
     } catch (error) {
@@ -24,15 +32,56 @@ function HomePage() {
     }
   };
 
+  const convertTimeFormat = (createTime) => {
+    const date = new Date(createTime);
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    return `${date.getDate()} ${
+      months[date.getMonth()]
+    } ${date.getFullYear()} ${date.toLocaleTimeString()}`;
+  };
+
   const deleteProduct = async (productId) => {
-    await axios.delete(`http://localhost:4001/products/${productId}`);
-    const newProducts = products.filter((product) => product._id !== productId);
-    setProducts(newProducts);
+    await axios.delete(`http://localhost:4500/products/${productId}`);
+    const results = await axios.get(
+      `http://localhost:4500/products?category=${category}&name=${searchInput}&page=${page}`
+    );
+
+    setProducts(results.data.data);
+  };
+
+  const setPrevios = (num) => {
+    if (page <= 1) {
+      setPage(page);
+    } else {
+      setPage(page - num);
+    }
+  };
+
+  const setNext = (num) => {
+    if (totalPage === page) {
+      setPage(page);
+    } else if (page < totalPage) {
+      setPage(page + num);
+    }
   };
 
   useEffect(() => {
-    getProducts();
-  }, [page,limit]);
+    getProduct();
+  }, [category, searchInput, page]);
 
   return (
     <div>
@@ -50,13 +99,26 @@ function HomePage() {
         <div className="search-box">
           <label>
             Search product
-            <input type="text" placeholder="Search by name" />
+            <input
+              type="text"
+              placeholder="Search by name"
+              onChange={(e) => {
+                setSearchInput(e.target.value);
+              }}
+            />
           </label>
         </div>
         <div className="category-filter">
           <label>
             View Category
-            <select id="category" name="category" value="it" onChange={(e)=>{}}>
+            <select
+              id="category"
+              name="category"
+              value={category}
+              onChange={(event) => {
+                setCategory(event.target.value);
+              }}
+            >
               <option disabled value="">
                 -- Select a category --
               </option>
@@ -67,15 +129,6 @@ function HomePage() {
           </label>
         </div>
       </div>
-
-      <div style={{textAlign:"center",marginBottom:"20px"}}>
-        <h1>query limit</h1>
-        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(3)}>3</button>
-        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(5)}>5</button>
-        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(7)}>7</button>
-        <button style={{padding:"4px",width:"100px"}} onClick={()=>setLimit(10)}>10</button>
-      </div>
-
       <div className="product-list">
         {!products.length && !isError && (
           <div className="no-blog-posts-container">
@@ -96,8 +149,8 @@ function HomePage() {
               <div className="product-detail">
                 <h1>Product name: {product.name} </h1>
                 <h2>Product price: {product.price}</h2>
-                <h3>Category: IT</h3>
-                <h3>Created Time: 1 Jan 2011, 00:00:00</h3>
+                <h3>Category: {product.category}</h3>
+                <h3>Created Time:{convertTimeFormat(product.create_at)}</h3>
                 <p>Product description: {product.description} </p>
                 <div className="product-actions">
                   <button
@@ -135,20 +188,16 @@ function HomePage() {
       </div>
 
       <div className="pagination">
-        <button className="previous-button" onClick={()=>{
-          setPage((prev)=>{
-            prev-=1
-            if(prev<1){
-              return 0
-            }
-            return prev
-          })
-        }}>Previous</button>
-        <button className="next-button" onClick={()=>{
-          setPage(page+1)
-        }}>Next</button>
+        <button className="previous-button" onClick={() => setPrevios(1)}>
+          Previous
+        </button>
+        <button className="next-button" onClick={() => setNext(1)}>
+          Next
+        </button>
       </div>
-      <div className="pages">1/ total page</div>
+      <div className="pages">
+        {page}/ {totalPage}
+      </div>
     </div>
   );
 }
